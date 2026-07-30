@@ -29,7 +29,7 @@ if 'JANUS_PASSWORD' in os.environ:
     VALID_PASSWORD = os.environ['JANUS_PASSWORD']
 else:
     VALID_PASSWORD = secrets.token_urlsafe(12)
-    print(f"⚠️  JANUS_PASSWORD not set — generated one-time login password: {VALID_PASSWORD}")
+    print(f"⚠️  JANUS_PASSWORD not set. Generated one-time login password: {VALID_PASSWORD}")
 
 
 def register_callbacks(app, User):
