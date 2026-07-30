@@ -16,6 +16,7 @@ import secrets
 
 import dash
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 from flask_login import login_user
 
 VALID_USERNAME = os.environ.get('JANUS_USERNAME', 'admin')
@@ -41,6 +42,14 @@ def register_callbacks(app, User):
         prevent_initial_call=True
     )
     def handle_login(n_clicks, username, password):
+        # prevent_initial_call isn't enough on its own: the login form is mounted
+        # dynamically by the router callback, and Dash fires the callbacks of a
+        # newly mounted component regardless. Without this the page greets every
+        # visitor with "Invalid username or password" before they've typed
+        # anything.
+        if not n_clicks:
+            raise PreventUpdate
+
         if username == VALID_USERNAME and password == VALID_PASSWORD:
             login_user(User(username))
             return '/home', ''
