@@ -14,6 +14,7 @@
 import dash
 import dash_bootstrap_components as dbc
 import os
+from pathlib import Path
 from flask_login import LoginManager, UserMixin
 import secrets
 
@@ -25,9 +26,25 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL], title="JANU
 server = app.server
 app.config.suppress_callback_exceptions = True
 
-# Set a secret key for Flask session management
-# In production, you should use a more secure method to generate and store this key
-server.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(16))
+
+def _get_secret_key():
+    """Flask session secret key. Prefer SECRET_KEY from the environment; if
+    unset, persist a generated key to a local file so it survives restarts
+    instead of invalidating every session each time the process restarts."""
+    env_key = os.environ.get('SECRET_KEY')
+    if env_key:
+        return env_key
+
+    key_file = Path('.flask_secret_key')
+    if key_file.exists():
+        return key_file.read_text().strip()
+
+    key = secrets.token_hex(16)
+    key_file.write_text(key)
+    return key
+
+
+server.secret_key = _get_secret_key()
 
 # Configure Flask-Login
 login_manager = LoginManager()

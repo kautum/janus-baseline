@@ -26,7 +26,6 @@ from functools import lru_cache
 from layouts.historical_connectivity_layout import preset_configs
 import uuid
 from utils.ui_logger import UILogger
-import config
 import requests
 import time
 

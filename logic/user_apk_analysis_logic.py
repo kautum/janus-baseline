@@ -345,7 +345,10 @@ def save_uploaded_files(stored_data, temp_dir):
     for item in stored_data:
         content_type, content_string = item['content'].split(',')
         decoded = base64.b64decode(content_string)
-        file_path = os.path.join(temp_dir, item['filename'])
+        # filename comes from the client; strip any path components to prevent
+        # writing outside temp_dir (e.g. "../../etc/passwd")
+        safe_filename = os.path.basename(item['filename'])
+        file_path = os.path.join(temp_dir, safe_filename)
         with open(file_path, 'wb') as f:
             f.write(decoded)
         # Return tuple of (filename, filepath) to match expected format
@@ -356,19 +359,22 @@ def save_uploaded_file_to_server(content, filename):
     # Create directory to store uploaded APKs if needed
     upload_dir = "uploaded_apks"
     os.makedirs(upload_dir, exist_ok=True)
-    
+
     # Decode the base64 content
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
-    
-    # Create unique filename to avoid conflicts
-    unique_filename = f"{uuid.uuid4()}_{filename}"
+
+    # filename comes from the client; strip any path components before it's
+    # used to build a server path, otherwise a crafted name like
+    # "../../../app.py" can write (and later delete) files outside upload_dir
+    safe_filename = os.path.basename(filename)
+    unique_filename = f"{uuid.uuid4()}_{safe_filename}"
     file_path = os.path.join(upload_dir, unique_filename)
-    
+
     # Write the file
     with open(file_path, 'wb') as f:
         f.write(decoded)
-    
+
     return file_path
 
 def plot_data(all_data, package_name, highlight_config, data_type, sort_order):
