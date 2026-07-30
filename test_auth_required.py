@@ -16,54 +16,65 @@ Checks that the analysis callbacks actually require a login.
 
 display_page() in index.py chooses which layout to render, which is easy to
 mistake for access control. It isn't: Dash callbacks are ordinary POSTs to
-/_dash-update-component and every analysis callback is registered globally at
-import time, so without an explicit guard they can be invoked directly by
-anyone who knows the component IDs - and those IDs are readable in the client
-bundle. Run: python test_auth_required.py
+/_dash-update-component and every callback is registered globally at import
+time, so without an explicit guard they can be invoked directly by anyone who
+knows the component IDs - and those IDs are listed by /_dash-dependencies.
+
+Run: python test_auth_required.py
 """
-from index import server
+from app import app
+from index import PUBLIC_CALLBACK_OUTPUTS, server
 
 
 def _post(client, output, inputs=None, state=None):
-    body = {
-        'output': output,
-        'inputs': inputs or [],
-        'changedPropIds': [],
-    }
+    body = {'output': output, 'inputs': inputs or [], 'changedPropIds': []}
     if state is not None:
         body['state'] = state
     return client.post('/_dash-update-component', json=body)
 
 
-def test_analysis_callback_rejected_when_logged_out():
-    """The expensive callbacks must not run for an anonymous caller."""
+def _registered_outputs():
+    """The output keys Dash actually dispatches on."""
+    return set(app.callback_map)
+
+
+def test_public_outputs_are_real_callbacks():
+    """Guard the guard: if a callback is renamed, the allowlist must not
+    silently start referring to something that no longer exists."""
+    missing = PUBLIC_CALLBACK_OUTPUTS - _registered_outputs()
+    assert not missing, (
+        f"allowlisted outputs are not registered callbacks: {missing}. "
+        "The login page would be unreachable."
+    )
+
+
+def test_every_other_callback_requires_login():
+    """Every registered callback except the allowlisted two must return 401.
+
+    Enumerating the real callback map rather than hand-picking a few names
+    means a newly added callback is covered automatically - and that this test
+    cannot pass by naming outputs that don't exist.
+    """
     client = server.test_client()
+    protected = _registered_outputs() - PUBLIC_CALLBACK_OUTPUTS
+    assert protected, "no protected callbacks found - the test is not testing anything"
 
-    protected = [
-        'progress-output.children',       # historical connectivity analysis
-        'user-apk-upload-store.data',     # accepts uploaded files
-        'precomputed-graph.figure',       # precomputed data access
+    unguarded = [
+        output for output in protected
+        if _post(client, output).status_code != 401
     ]
-    for output in protected:
-        resp = _post(client, output)
-        assert resp.status_code == 401, (
-            f"{output} answered {resp.status_code} to an unauthenticated POST; "
-            "expected 401"
-        )
+    assert not unguarded, (
+        f"{len(unguarded)} callback(s) answered an unauthenticated POST without "
+        f"401, e.g. {unguarded[:3]}"
+    )
 
 
-def test_login_and_router_still_reachable_when_logged_out():
+def test_login_and_router_stay_reachable():
     """The guard must not lock out the login form itself.
 
-    Without this, the fix would be a lockout rather than a fix: the router
-    renders the login page and the login callback checks the credentials, so
-    both have to stay callable while nobody is authenticated yet.
-
-    We assert only that the guard does not return 401 for these two. Dash may
-    still reject the hand-built request body for its own reasons - these tests
-    construct the POST directly rather than going through a browser - but
-    anything other than 401 proves the request got past the guard, which is the
-    property under test.
+    Asserted as "not 401": these requests are hand-built rather than sent by a
+    browser, so Dash may reject the body for its own reasons. Anything other
+    than 401 proves the request got past the guard, which is what's under test.
     """
     client = server.test_client()
 
@@ -86,18 +97,39 @@ def test_login_and_router_still_reachable_when_logged_out():
         "login callback was blocked; nobody could ever log in"
 
 
+def test_malformed_body_is_refused():
+    """The guard must fail closed, not open."""
+    client = server.test_client()
+
+    for body in (None, {}, {'output': ''}, {'output': 'page-content.children.extra'}):
+        resp = client.post('/_dash-update-component', json=body)
+        assert resp.status_code == 401, \
+            f"malformed body {body!r} was not refused (got {resp.status_code})"
+
+    # A substring of an allowlisted name must not be enough to get through.
+    resp = _post(client, '..progress-historical-connectivity.children...login-error.children..')
+    assert resp.status_code == 401, \
+        "an output merely mentioning an allowlisted name was let through"
+
+
 def test_admin_status_requires_login():
     client = server.test_client()
-    resp = client.get('/admin/status')
-    assert resp.status_code != 200, \
-        "/admin/status served session information to an anonymous caller"
+    resp = client.get('/admin/status', follow_redirects=False)
+    assert resp.status_code in (301, 302, 401, 403), (
+        f"/admin/status answered {resp.status_code} to an anonymous caller; "
+        "it discloses active session information"
+    )
 
 
 def demo():
-    test_analysis_callback_rejected_when_logged_out()
-    test_login_and_router_still_reachable_when_logged_out()
+    test_public_outputs_are_real_callbacks()
+    test_every_other_callback_requires_login()
+    test_login_and_router_stay_reachable()
+    test_malformed_body_is_refused()
     test_admin_status_requires_login()
-    print("OK: analysis callbacks require login; login page still reachable")
+    n = len(_registered_outputs() - PUBLIC_CALLBACK_OUTPUTS)
+    print(f"OK: all {n} non-public callbacks require login; login page reachable; "
+          "guard fails closed")
 
 
 if __name__ == "__main__":

@@ -64,8 +64,14 @@ app.layout = dbc.Container([
 ], fluid=True)
 
 # Callbacks that must stay reachable before the user has logged in: the router
-# (which decides to show the login page) and the login form itself.
-PUBLIC_CALLBACK_OUTPUTS = ('page-content.children', 'login-error')
+# (which decides to show the login page) and the login form itself. Matched
+# exactly rather than by substring, so a crafted output string can't smuggle a
+# protected callback through by mentioning one of these names.
+# These are the literal keys Dash registers; see app.callback_map.
+PUBLIC_CALLBACK_OUTPUTS = frozenset({
+    'page-content.children',
+    '..url.pathname...login-error.children..',
+})
 
 
 @server.before_request
@@ -94,10 +100,11 @@ def require_login_for_callbacks():
         return None
 
     body = request.get_json(silent=True) or {}
-    output = body.get('output', '')
-    if any(public in output for public in PUBLIC_CALLBACK_OUTPUTS):
+    if body.get('output', '') in PUBLIC_CALLBACK_OUTPUTS:
         return None
 
+    # Anything unrecognised is refused rather than allowed: a malformed or
+    # unparseable body must not become a way past the guard.
     return {'error': 'authentication required'}, 401
 
 
