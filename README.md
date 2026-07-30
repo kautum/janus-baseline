@@ -12,8 +12,9 @@ What I could do was read the code properly, get it running, fix what was broken,
 write down what I learned so that the next person doesn't have to work it out from
 scratch.
 
-The work is on the
-[`fix/bootable-and-secure-baseline`](../../tree/fix/bootable-and-secure-baseline) branch.
+You are looking at the `fix/bootable-and-secure-baseline` branch, which is where all of
+this lives. The [`main`](../../tree/main) branch is left exactly as upstream has it, so
+you can diff the two to see precisely what changed.
 
 ## The documentation is the main thing here
 
