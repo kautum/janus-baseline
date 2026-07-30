@@ -7,7 +7,7 @@ list of servers that app talks to has changed over the years**.
 
 ## The longer version
 
-Every Android app has web addresses baked into its code — the APIs it calls, the
+Every Android app has web addresses baked into its code: the APIs it calls, the
 analytics services it reports to, the payment processors it uses, the CDNs it loads
 assets from. When a developer stops using a service, the old address often stays behind
 in the code for a while, and even when removed, it is preserved in the archived older
@@ -16,7 +16,7 @@ versions of the app.
 That makes an app's release history a kind of **sediment record of its infrastructure
 dependencies**. If a fintech app quietly switches from a US cloud provider to a Chinese
 one, or a messaging app adds a new state-linked analytics endpoint, that change is
-visible in the code long before anyone announces it — if you know to look, and if you
+visible in the code long before anyone announces it, if you know to look and if you
 can compare versions systematically.
 
 Janus is the tool for doing that comparison systematically.
@@ -27,8 +27,8 @@ Janus is built by [DIGISILK](https://www.digisilk.eu/), a project in the Departm
 Digital Humanities at King's College London, funded by the European Research Council
 (Horizon 2020, grant agreement 850891) and led by Dr Elisa Oreglia.
 
-DIGISILK studies **China's Digital Silk Road** — the digital component of the Belt and
-Road Initiative — as it plays out on the ground in China, Kazakhstan, Myanmar and
+DIGISILK studies **China's Digital Silk Road**: the digital component of the Belt and
+Road Initiative, as it plays out on the ground in China, Kazakhstan, Myanmar and
 Cambodia. The project's methods are mostly ethnographic: fieldwork, interviews, document
 analysis. Janus supplies a complementary quantitative layer, letting researchers
 triangulate what people say about digital infrastructure against what the software
@@ -37,7 +37,7 @@ itself reveals.
 A published example: DIGISILK's paper *"Following the code: what apps reveal about
 US–China tech competition"* (**Big Data & Society**, 2025) used Janus to trace the
 Kazakhstani super-app **Kaspi**, showing how its embedded endpoints recorded shifting
-platform dependencies — evidence relevant to debates about the "splinternet" and
+platform dependencies, evidence relevant to debates about the "splinternet" and
 technological decoupling.
 
 The related tool [`bgp_parser`](https://github.com/digisilk/bgp_parser) does something

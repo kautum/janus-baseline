@@ -1,14 +1,14 @@
 # Getting Janus running
 
 Written for someone who does not consider themselves a programmer. If you are
-comfortable with Python, skim — the only non-obvious part is [the data files](#3-get-the-data-files).
+comfortable with Python, skim. The only non-obvious part is [the data files](#3-get-the-data-files).
 
 ## What you need first
 
 - **Python 3.9 or newer.** Check by opening a terminal and running `python3 --version`.
 - **Git**, to download the code.
 - **An AndroZoo API key**, but only for the live-download mode. Request one free at
-  [androzoo.uni.lu](https://androzoo.uni.lu/access) — it is granted to people at
+  [androzoo.uni.lu](https://androzoo.uni.lu/access). It is granted to people at
   academic institutions. You do *not* need one to browse pre-computed results.
 
 ## 1. Download the code
@@ -46,7 +46,7 @@ that are not in the repository because they are too large for Git:
 | File | What it is |
 |---|---|
 | `androzoo.db` | A SQLite index of AndroZoo's catalogue: which APK versions exist for which package, and their hashes. Janus queries this to decide what to download. |
-| `filtered_package_ids_with_counts10_ver.json` | The list of packages that have at least 10 versions available — i.e. the apps worth analysing over time. |
+| `filtered_package_ids_with_counts10_ver.json` | The list of packages that have at least 10 versions available, i.e. the apps worth analysing over time. |
 
 `index.py` currently tells you to run `python bootstrap_database.py`, **but that script
 is not in the repository.** Until it is, ask the DIGISILK team for both files directly
@@ -66,7 +66,7 @@ export JANUS_PASSWORD=choose-something  # Windows: set JANUS_PASSWORD=...
 ```
 
 If you skip this, Janus generates a random password and prints it to the terminal on
-startup — fine for a quick local look, but it changes every restart.
+startup. That is fine for a quick local look, but it changes every restart.
 
 ## 5. Start it
 
@@ -90,7 +90,7 @@ Useful environment variables:
 
 - **Just looking at results?** Use **Connectivity (Pre-computed)**. Fast, no API key.
 - **Analysing a specific app's history?** Use **Connectivity (Real-time)**. Needs an
-  API key, and can take hours — start with two or three packages, not twenty.
+  API key, and can take hours. Start with two or three packages, not twenty.
 - **Have APK files already?** Use **Connectivity (Upload APKs)**.
 
 ## Deploying it for other people
@@ -119,7 +119,7 @@ See [step 3](#3-get-the-data-files).
 
 **The page loads but the logos are missing**
 The layouts reference `assets/digisilk_countries.png` and `assets/sponsors.png`, but the
-repository has no `assets/` folder. Cosmetic only — see
+repository has no `assets/` folder. Cosmetic only. See
 [05-known-issues.md](05-known-issues.md).
 
 **An analysis appears to hang**

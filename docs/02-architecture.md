@@ -23,7 +23,7 @@ the running application imports them.
 ## Layout
 
 ```
-index.py         Entry point — run this. Routing, navbar, auth gate, /admin/status.
+index.py         Entry point. run this. Routing, navbar, auth gate, /admin/status.
 app.py           Creates the Dash app + Flask server, configures Flask-Login.
 config.py        Timeouts, retry policy, optional UI feature toggles.
 
@@ -77,24 +77,24 @@ utils/ui_logger.py ──► progress text streamed back to the page while this 
 
 ## The three modes
 
-All three end in the same place — a chart of endpoints across versions — but they differ
+All three end in the same place, a chart of endpoints across versions, but they differ
 in where the APKs come from.
 
-**Historical (real-time)** — `/historical-connectivity`
+**Historical (real-time)**: `/historical-connectivity`
 The full pipeline. Give it package names and a date range; it queries `androzoo.db` for
 matching releases, downloads them from AndroZoo (API key required), and analyses them.
 Slow: hours for a handful of apps. Bounded by `PROCESSING_TIMEOUT`.
 
-**Pre-computed** — `/precomputed-connectivity`
+**Pre-computed**: `/precomputed-connectivity`
 Reads analyses that were run earlier and saved under `precomputed_data/`. Fast, needs no
 API key. This is the mode a researcher who just wants to look at results should use, and
 the one most worth making friendlier.
 
-**Upload** — `/user-apk-analysis`
+**Upload**: `/user-apk-analysis`
 The user supplies APK files directly from their own machine through the browser. Useful
 for apps not in AndroZoo, or versions a researcher obtained themselves.
 
-The three `logic/` modules **duplicate a lot of each other** — `initialize_database`,
+The three `logic/` modules **duplicate a lot of each other**: `initialize_database`,
 `generate_download_link`, plotting and download helpers appear in near-identical form in
 two or three places. Consolidating them into `utils/` is worthwhile, but do it
 incrementally and verify output is unchanged at each step: these functions produce
@@ -104,9 +104,9 @@ figures that end up in published papers.
 
 Endpoint extraction can use either of two engines, selectable in the UI:
 
-- **Androguard** (`androguard==3.3.5`) — a full Android reverse-engineering library.
+- **Androguard** (`androguard==3.3.5`): a full Android reverse-engineering library.
   Thorough, well-tested, slow, memory-hungry.
-- **DEXParser** (`utils/dex_parser.py`) — written for this project. Reads the DEX file's
+- **DEXParser** (`utils/dex_parser.py`): written for this project. Reads the DEX file's
   string table directly instead of fully decompiling. Much faster, but hand-rolled
   binary parsing with correspondingly less tolerance for malformed input.
 
@@ -127,5 +127,5 @@ Treat any change to the parser layer as high-risk: it determines the numbers.
 
 `app.py` configures Flask-Login with a single shared account, and `index.py` decides
 which page to render based on `current_user.is_authenticated`. This is appropriate to a
-small internal research tool, but note the guard is applied when rendering pages — see
+small internal research tool, but note the guard is applied when rendering pages. See
 [05-known-issues.md](05-known-issues.md) regarding direct callback access.

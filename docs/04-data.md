@@ -4,7 +4,7 @@
 
 [AndroZoo](https://androzoo.uni.lu) is a research archive at the University of
 Luxembourg holding millions of Android APKs collected from Google Play and other
-stores, including **historical versions** — which is the part Janus depends on. Access
+stores, including **historical versions**: which is the part Janus depends on. Access
 is free for academic use but requires an API key.
 
 Janus uses two things from AndroZoo:
@@ -22,7 +22,7 @@ orders versions chronologically by these.
 
 | File | Contents | In Git? |
 |---|---|---|
-| `androzoo.db` | SQLite index of the AndroZoo catalogue | No — too large |
+| `androzoo.db` | SQLite index of the AndroZoo catalogue | No, too large |
 | `filtered_package_ids_with_counts10_ver.json` | Packages having ≥10 available versions | No |
 | `precomputed_data/` | Previously computed analyses + `metadata.json` | No |
 
@@ -32,7 +32,7 @@ does not exist yet. Obtain them from the DIGISILK team. See
 
 ## What gets extracted from an APK
 
-An APK is a ZIP archive. Inside it are one or more `.dex` files — the compiled Android
+An APK is a ZIP archive. Inside it are one or more `.dex` files, the compiled Android
 bytecode. Every DEX file contains a **string table**: all the string literals used by
 the program, including hardcoded URLs and hostnames.
 
@@ -48,8 +48,8 @@ splits each one into three levels using
 
 Two extraction engines are available (selectable in the UI):
 
-- **Androguard** — full reverse-engineering library. Thorough, slow, memory-hungry.
-- **DEXParser** (`utils/dex_parser.py`) — reads the string table directly. Much faster,
+- **Androguard**: full reverse-engineering library. Thorough, slow, memory-hungry.
+- **DEXParser** (`utils/dex_parser.py`): reads the string table directly. Much faster,
   written specifically for this project.
 
 They do not always return identical results. **Keep the parser consistent within a
@@ -65,15 +65,15 @@ catalogue.
 
 ## How to read the output
 
-The charts show **which endpoints appear in which versions** — typically a heatmap with
+The charts show **which endpoints appear in which versions**: typically a heatmap with
 endpoints down one axis and versions across the other.
 
 What you are looking for:
 
-- **An endpoint that appears and then stops** — a service the app dropped.
-- **An endpoint that appears partway through** — a new dependency, often after an
+- **An endpoint that appears and then stops**: a service the app dropped.
+- **An endpoint that appears partway through**: a new dependency, often after an
   acquisition, funding round, or regulatory change.
-- **A cluster changing together** — usually a whole SDK being added or removed.
+- **A cluster changing together**: usually a whole SDK being added or removed.
 
 ### Interpretation caveats
 
@@ -89,8 +89,8 @@ These matter, because it is easy to over-read this data:
    usually a gap in the archive, not a period when the app stopped changing.
 4. **The parser affects the result.** See above.
 
-Janus is strongest as a way to *generate questions* — "why did this app start talking to
-that host in 2019?" — which are then answered with other evidence. The DIGISILK paper on
+Janus is strongest as a way to *generate questions*, such as "why did this app start talking to
+that host in 2019?", which are then answered with other evidence. The DIGISILK paper on
 Kaspi (*Big Data & Society*, 2025) uses it this way, alongside interviews and document
 analysis, rather than treating the endpoint list as a standalone finding.
 
@@ -98,5 +98,5 @@ analysis, rather than treating the endpoint list as a standalone finding.
 
 In upload mode, files are written to `uploaded_apks/` and validated as real ZIP archives
 before anything else touches them. They are removed when you remove them from the list
-in the UI; note that files from an abandoned session are currently left behind — see
+in the UI; note that files from an abandoned session are currently left behind. See
 [05-known-issues.md](05-known-issues.md).

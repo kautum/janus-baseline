@@ -11,7 +11,7 @@ Start here.
 | Know what's currently broken | [05-known-issues.md](05-known-issues.md) |
 
 `../CLAUDE.md` at the repository root is the equivalent entry point for AI coding
-assistants — it's a condensed version of these pages. If you change how the project
+assistants. It is a condensed version of these pages. If you change how the project
 works, update both.
 
 ## Who this documentation is for
@@ -29,5 +29,5 @@ Two audiences, deliberately:
 Janus is research software. It has produced real published findings, but it has been
 written under research timelines by people who were mostly not full-time engineers.
 Some of it is rough. [05-known-issues.md](05-known-issues.md) is an honest list rather
-than a hidden one, because the alternative — every new contributor rediscovering the
-same problems — costs the project more.
+than a hidden one, because the alternative, every new contributor rediscovering the
+same problems, costs the project more.

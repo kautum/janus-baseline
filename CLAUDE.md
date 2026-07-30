@@ -1,4 +1,4 @@
-# Janus — context for AI coding assistants
+# Janus: context for AI coding assistants
 
 This file is read automatically by Claude Code and similar tools. It exists so that
 any assistant (or any new developer) starts with the same accurate picture of this
@@ -44,7 +44,7 @@ earlier Flask version of this app. Nothing imports them. Do not extend them.
 ## The three analysis modes
 
 Each has a `layouts/` + `callbacks/` + `logic/` triple. They do similar things and
-share a lot of near-duplicated code — that duplication is known technical debt, not a
+share a lot of near-duplicated code. That duplication is known technical debt, not a
 deliberate design.
 
 | Mode | Route | What it does |
@@ -68,16 +68,16 @@ deliberate design.
 5. Progress is streamed back to the browser via `utils/ui_logger.py`.
 
 Long runs are bounded by `PROCESSING_TIMEOUT` in `config.py` and return partial results
-rather than failing outright — deliberate, because researchers would rather have some
+rather than failing outright. That is deliberate, because researchers would rather have some
 data than none after an hour.
 
 ## Conventions to follow
 
 - **Error handling:** log with context (`logger.error(f"...: {e}")`) and continue where a
-  single APK failing shouldn't kill a whole run. Never add a bare `except:` — silently
+  single APK failing shouldn't kill a whole run. Never add a bare `except:`. Silently
   swallowed failures show up as unexplained missing data in someone's research.
 - **British spelling** in user-facing strings and comments ("analyse", "visualise",
-  "initialise") — matches the existing codebase and the institution.
+  "initialise"). This matches the existing codebase and the institution.
 - **Licence headers:** every source file carries the Apache-2.0 header. Keep it.
 - **Don't rewrite working analysis code to make it prettier.** The numbers it produces
   are going into published research. Behaviour-preserving changes only, unless the
@@ -87,7 +87,7 @@ data than none after an hour.
 
 See `docs/03-setup.md`. Note that the app requires two data files (`androzoo.db` and
 `filtered_package_ids_with_counts10_ver.json`) that are **not in the repository** and
-must be obtained separately — this is currently the single biggest barrier to new
+must be obtained separately. This is currently the single biggest barrier to new
 contributors.
 
 ## Known issues
