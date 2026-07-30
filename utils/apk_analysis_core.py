@@ -341,13 +341,17 @@ def process_package_apks(universal_cache_dir, package_name, num_cores, parser_se
         print(f"No relevant APKs found for {package_name}")
         return []
 
-    pool = mp.Pool(num_cores, maxtasksperchild=4)
-    results = pool.starmap(process_file, [
-        (apk['sha256'], universal_cache_dir, apk['vercode'], apk['vtscandate'], parser_selection) 
-        for apk in relevant_apks
-    ])
-    pool.close()
-    pool.join()
+    # Context manager so the worker processes are always cleaned up. Previously
+    # close()/join() sat after starmap() with no try/finally, so if starmap
+    # raised - a malformed APK crashing a worker, a pickling error - the pool
+    # was orphaned and its processes leaked. Over an unattended multi-hour run
+    # doing many packages, those leaks accumulate until the machine is out of
+    # processes.
+    with mp.Pool(num_cores, maxtasksperchild=4) as pool:
+        results = pool.starmap(process_file, [
+            (apk['sha256'], universal_cache_dir, apk['vercode'], apk['vtscandate'], parser_selection)
+            for apk in relevant_apks
+        ])
 
     all_data = []
     for result in results:

@@ -340,15 +340,47 @@ def download_apks(package_names, apikey, universal_cache_dir, db_path, start_dat
 def should_cancel():
     return False
 
+# An APK is a ZIP archive, so a genuine one always starts with this signature.
+ZIP_MAGIC = b'PK\x03\x04'
+
+
+def decode_upload(content, filename):
+    """Decode one browser upload into bytes, rejecting anything that isn't an APK.
+
+    Both upload paths go through here so the checks can't drift apart. Raises
+    ValueError on bad input; callers are expected to log it and skip that file
+    rather than aborting the whole batch.
+    """
+    if not content or ',' not in content:
+        raise ValueError(f"malformed upload payload for {filename!r}")
+
+    _content_type, content_string = content.split(',', 1)
+    decoded = base64.b64decode(content_string)
+
+    if not decoded.startswith(ZIP_MAGIC):
+        raise ValueError(
+            f"{filename!r} is not an APK (expected a ZIP archive). "
+            "Rejecting rather than writing arbitrary bytes to disk."
+        )
+    return decoded
+
+
+def safe_upload_name(filename):
+    """Strip any directory components from a client-supplied filename.
+
+    The browser controls this string, so without basename() a crafted name such
+    as '../../../app.py' escapes the upload directory - and, via the remove
+    handler that later calls os.remove() on the stored path, can delete files
+    outside it too.
+    """
+    return os.path.basename(filename)
+
+
 def save_uploaded_files(stored_data, temp_dir):
     apk_files = []
     for item in stored_data:
-        content_type, content_string = item['content'].split(',')
-        decoded = base64.b64decode(content_string)
-        # filename comes from the client; strip any path components to prevent
-        # writing outside temp_dir (e.g. "../../etc/passwd")
-        safe_filename = os.path.basename(item['filename'])
-        file_path = os.path.join(temp_dir, safe_filename)
+        decoded = decode_upload(item['content'], item['filename'])
+        file_path = os.path.join(temp_dir, safe_upload_name(item['filename']))
         with open(file_path, 'wb') as f:
             f.write(decoded)
         # Return tuple of (filename, filepath) to match expected format
@@ -360,15 +392,9 @@ def save_uploaded_file_to_server(content, filename):
     upload_dir = "uploaded_apks"
     os.makedirs(upload_dir, exist_ok=True)
 
-    # Decode the base64 content
-    content_type, content_string = content.split(',')
-    decoded = base64.b64decode(content_string)
+    decoded = decode_upload(content, filename)
 
-    # filename comes from the client; strip any path components before it's
-    # used to build a server path, otherwise a crafted name like
-    # "../../../app.py" can write (and later delete) files outside upload_dir
-    safe_filename = os.path.basename(filename)
-    unique_filename = f"{uuid.uuid4()}_{safe_filename}"
+    unique_filename = f"{uuid.uuid4()}_{safe_upload_name(filename)}"
     file_path = os.path.join(upload_dir, unique_filename)
 
     # Write the file

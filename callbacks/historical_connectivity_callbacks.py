@@ -114,7 +114,8 @@ def update_highlight_config(*args):
     
     try:
         triggered_id = json.loads(triggered_id) if '{' in triggered_id else triggered_id
-    except:
+    except (json.JSONDecodeError, TypeError):
+        # Not a pattern-matching component ID - keep it as the plain string.
         pass
 
     # Handle remove button clicks

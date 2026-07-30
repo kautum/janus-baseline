@@ -46,6 +46,13 @@ def _get_secret_key():
 
 server.secret_key = _get_secret_key()
 
+# Cap the size of an incoming request body. Without this an APK upload is
+# buffered and then base64-decoded in full with no upper bound, so one large
+# POST can exhaust memory and disk. Raise it if researchers hit the limit with
+# legitimately large APKs.
+MAX_UPLOAD_MB = int(os.environ.get('JANUS_MAX_UPLOAD_MB', 500))
+server.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_MB * 1024 * 1024
+
 # Configure Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(server)

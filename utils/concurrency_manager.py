@@ -19,6 +19,7 @@ Helps prevent too many analyses from running at the same time, which can overloa
 import os
 import time
 import logging
+import threading
 
 logger = logging.getLogger(__name__)
 
@@ -59,39 +60,59 @@ def get_max_concurrent_users():
 MAX_CONCURRENT_USERS = get_max_concurrent_users()  # Dynamic based on system resources
 active_sessions = {}  # Dictionary to track active analysis sessions
 
+# active_sessions is touched from several threads at once: the server runs with
+# threaded=True, clean_stale_sessions() fires on every single request, and an
+# analysis callback can register or remove a session hours later from its own
+# thread. Without this lock, one request iterating the dict while another
+# inserts into it raises "dictionary changed size during iteration" - which
+# happens inside the page-routing callback and so breaks the site for everyone,
+# not just the user running the analysis.
+_sessions_lock = threading.Lock()
+
 def clean_stale_sessions():
     """Remove sessions that have been active for too long"""
     current_time = time.time()
-    stale_sessions = []
-    
-    for session_id, session_data in active_sessions.items():
-        if current_time - session_data['start_time'] > SESSION_TIMEOUT:
-            stale_sessions.append(session_id)
-    
-    for session_id in stale_sessions:
-        logger.info(f"Removing stale session: {session_id}")
-        del active_sessions[session_id]
-    
+
+    with _sessions_lock:
+        stale_sessions = [
+            session_id
+            for session_id, session_data in active_sessions.items()
+            if current_time - session_data['start_time'] > SESSION_TIMEOUT
+        ]
+
+        for session_id in stale_sessions:
+            logger.info(f"Removing stale session: {session_id}")
+            del active_sessions[session_id]
+
+        remaining = len(active_sessions)
+
     if stale_sessions:
-        logger.info(f"Removed {len(stale_sessions)} stale sessions. Active sessions: {len(active_sessions)}")
+        logger.info(f"Removed {len(stale_sessions)} stale sessions. Active sessions: {remaining}")
 
 def register_session(session_id, data):
     """Register a new analysis session"""
-    active_sessions[session_id] = {
-        'start_time': time.time(),
-        **data
-    }
-    logger.info(f"Registered session {session_id}. Current active sessions: {len(active_sessions)}")
+    with _sessions_lock:
+        active_sessions[session_id] = {
+            'start_time': time.time(),
+            **data
+        }
+        active_count = len(active_sessions)
+
+    logger.info(f"Registered session {session_id}. Current active sessions: {active_count}")
     return True
 
 def remove_session(session_id):
     """Remove a session when it's complete"""
-    if session_id in active_sessions:
+    with _sessions_lock:
+        if session_id not in active_sessions:
+            return False
         del active_sessions[session_id]
-        logger.info(f"Removed session {session_id}. Current active sessions: {len(active_sessions)}")
-        return True
-    return False
+        active_count = len(active_sessions)
+
+    logger.info(f"Removed session {session_id}. Current active sessions: {active_count}")
+    return True
 
 def has_capacity():
     """Check if the server has capacity for more sessions"""
-    return len(active_sessions) < MAX_CONCURRENT_USERS
+    with _sessions_lock:
+        return len(active_sessions) < MAX_CONCURRENT_USERS

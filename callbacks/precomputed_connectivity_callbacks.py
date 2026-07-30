@@ -170,9 +170,11 @@ def update_precomputed_stats(pathname):
                         html.P(f"Total Packages Available: {count}"),
                         html.P("10 versions per package", className="text-muted small")
                     ])
-        except:
-            pass
-        
+        except (OSError, json.JSONDecodeError) as e:
+            # Falling through to "no statistics" is fine, but say why in the log -
+            # a silently unreadable index file otherwise looks like empty data.
+            logger.warning(f"Could not read {json_path} for package stats: {e}")
+
         return html.P("No statistics available")
     
     return html.Div([

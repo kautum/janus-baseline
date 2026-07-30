@@ -354,7 +354,7 @@ def plot_data(all_data, package_name, highlight_config, data_type):
     df_date_pivot = df.pivot_table(index='Data', columns='version', values='vtscandate', aggfunc='first')
 
     sorted_versions = sorted(df_count_pivot.columns,
-                             key=lambda s: [int(u) if u.isdigit() else u for u in re.split('(\d+)', s)])
+                             key=lambda s: [int(u) if u.isdigit() else u for u in re.split(r'(\d+)', s)])
     df_count_pivot = df_count_pivot[sorted_versions]
     df_date_pivot = df_date_pivot[sorted_versions]
 
